@@ -6,6 +6,21 @@ const User = require("../model/userSchema");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const requireLogin = require('../middleware/requireLogin')
+const nodemailer = require('nodemailer')
+const sendinBlueTransport = require('nodemailer-sendinblue-transport');
+
+
+const transporter = nodemailer.createTransport(sendinBlueTransport({
+    host:process.env.SMTP_HOST,
+        // api_key:"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"
+        port:process.env.SMTP_PORT,
+    auth:{
+        user:process.env.MAIL_USER,
+        password:process.env.MAIL_PASS        
+
+    }
+}))
+
 
 
 router.get('/protected',requireLogin,(req,res)=>{
@@ -28,6 +43,12 @@ router.post('/signup',async(req,res)=>{
         const user = new User({name,email,password,pic});
         const userRegister = await user.save();
         if (userRegister) {
+            await transporter.sendMail({
+                to:user.email,
+                from:"no-reply@insta.com",
+                subject:"signup success",
+                html:"<h1>Welcome to InstaClone </h1>"
+            })
             res.status(201).json({ message: "User registered Successfully" });
         }
         else {
